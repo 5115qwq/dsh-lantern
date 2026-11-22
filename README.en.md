@@ -618,6 +618,10 @@ This fork would have been far more work without them.
 This fork numbers independently from **1.0.0** (upstream is `0.1.x`) to keep the two code bases distinct.
 Current version: see the badge above or [Releases](https://github.com/5115qwq/dsh-lantern/releases).
 
+### Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for what changed in each version.
+
 ### License
 
 MIT, inherited from upstream. See [LICENSE](./LICENSE).

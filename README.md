@@ -864,6 +864,10 @@ DSH 内核行为，非本插件所致。插件会原样透传 `max_tokens`（仅
 本仓库自 **1.0.0** 起独立编号（原版为 `0.1.x`），以区分两套代码基。
 当前版本见上方徽章与 [Releases](https://github.com/5115qwq/dsh-lantern/releases)。
 
+### 更新日志
+
+每个版本改了什么，见 [CHANGELOG.md](./CHANGELOG.md)。
+
 ### 许可
 
 沿用原版 [MIT License](./LICENSE)。
