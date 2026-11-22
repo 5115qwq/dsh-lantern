@@ -86,7 +86,17 @@ this plugin handles **protocol translation and policy only**.
 
 ## Installation
 
-In **Settings → Plugins → Add plugin**, paste either form:
+In **Settings → Plugins → Add plugin**, paste any of the following:
+
+**npm (recommended)**
+
+```
+@5115qwq/dsh-lantern
+```
+
+Installing from npm gives you **update prompts** (Settings → Plugins shows "update available").
+
+**GitHub**
 
 ```
 https://github.com/5115qwq/dsh-lantern
@@ -95,6 +105,9 @@ https://github.com/5115qwq/dsh-lantern
 ```
 github:5115qwq/dsh-lantern
 ```
+
+> Plugins installed from Git **do not show the version / check-for-updates block** — that is DSH's design.
+> Use the npm form above if you want update prompts.
 
 **Restart DeepSeek Harness** after installation.
 

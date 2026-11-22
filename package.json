@@ -1,5 +1,5 @@
 {
-  "name": "dsh-lantern",
+  "name": "@5115qwq/dsh-lantern",
   "version": "1.0.7",
   "description": "LANtern（局域网模型网关）：把本机 DeepSeek Harness 已注册的全部模型，以 OpenAI / Anthropic 兼容接口开放给同一局域网。自带 API Key、限流熔断、能力闸门、四档推理契约、故障转移与用量统计。",
   "icon": "./icon.svg",
@@ -69,8 +69,19 @@
   },
   "license": "MIT",
   "author": {
-    "name": "Saretheya",
-    "url": "https://github.com/Saretheya"
+    "name": "5115qwq",
+    "url": "https://github.com/5115qwq"
+  },
+  "contributors": [
+    {
+      "name": "Saretheya",
+      "url": "https://github.com/Saretheya"
+    }
+  ],
+  "fork": {
+    "of": "Saretheya/dsh-lantern",
+    "url": "https://github.com/Saretheya/dsh-lantern",
+    "note": "Fork of the original LANtern plugin (MIT). Version numbering restarts at 1.0.0."
   },
   "repository": {
     "type": "git",
@@ -79,16 +90,5 @@
   "homepage": "https://github.com/5115qwq/dsh-lantern#readme",
   "bugs": {
     "url": "https://github.com/5115qwq/dsh-lantern/issues"
-  },
-  "contributors": [
-    {
-      "name": "5115qwq",
-      "url": "https://github.com/5115qwq"
-    }
-  ],
-  "fork": {
-    "of": "Saretheya/dsh-lantern",
-    "url": "https://github.com/Saretheya/dsh-lantern",
-    "note": "本版是原版的改版（fork）。原版采用 MIT 许可，原作者 Saretheya。"
   }
 }

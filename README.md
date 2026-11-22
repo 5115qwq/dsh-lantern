@@ -91,6 +91,16 @@ LANtern 把 DSH 的模型目录**翻译成标准 API** 暴露到局域网：
 
 在 **设置 → 插件 → 添加插件** 中粘贴以下**任一**形式：
 
+**npm（推荐）**
+
+```
+@5115qwq/dsh-lantern
+```
+
+走 npm registry，能获得**版本更新提示**（设置 → 插件里会显示「可更新」）。
+
+**GitHub**
+
 ```
 https://github.com/5115qwq/dsh-lantern
 ```
@@ -98,6 +108,9 @@ https://github.com/5115qwq/dsh-lantern
 ```
 github:5115qwq/dsh-lantern
 ```
+
+> 从 Git 安装的插件**不会显示「版本 / 检查更新」区块** —— 这是 DSH 的设计。
+> 想要自动更新提示，请用上面的 npm 形式。
 
 安装完成后**重启 DeepSeek Harness**。
 
