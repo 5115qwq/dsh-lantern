@@ -6,6 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.2-green.svg)](https://github.com/5115qwq/dsh-lantern/releases)
 [![Platform](https://img.shields.io/badge/DSH-%E2%89%A50.1.5-7c3aed.svg)](https://github.com/deepseek-ai/deepseek-harness)
+[![Tests](https://github.com/5115qwq/dsh-lantern/actions/workflows/tests.yml/badge.svg)](https://github.com/5115qwq/dsh-lantern/actions/workflows/tests.yml)
 
 > **本仓库是 [Saretheya/dsh-lantern](https://github.com/Saretheya/dsh-lantern) 的改版（fork）。**
 > 原版由 [@Saretheya](https://github.com/Saretheya) 编写，采用 MIT 许可。

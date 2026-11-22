@@ -1,0 +1,23 @@
+# 统一行尾为 LF —— 这是跨平台正确性的基础。
+#
+# 为什么必须显式指定：
+#   本仓库的测试套件大量读取自身源码做正则断言（如 `split('\n')`、`/^    \}$/m`、
+#   逐行匹配配置字段）。若 Git 在 Windows 上按 core.autocrlf 把文件检出成 CRLF，
+#   所有按行判断的断言都会失效 —— 表现为「Linux 全绿、Windows 若干失败」。
+#
+#   实测未加此文件时，Windows 上有 4 个测试失败（3 个断言失败 + 1 个崩溃）。
+#   加上 `eol=lf` 后全平台一致。
+* text=auto eol=lf
+
+# 二进制资源（不做行尾转换）
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.zip binary
+*.gz binary
+
+# SVG 是文本，但不要被当作需要转换的普通文本反复改写
+*.svg text eol=lf

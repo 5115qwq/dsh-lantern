@@ -1,0 +1,103 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    name: Regression (Node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Node 引擎要求：^22.19.0 || >=24.0.0
+        node: ['22.x', '24.x']
+        os: [ubuntu-latest]
+        include:
+          # Windows 也跑一遍 —— 大量用户实际在 Windows 上运行
+          - node: '22.x'
+            os: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Show environment
+        shell: bash
+        run: |
+          node --version
+          echo "repo root: $GITHUB_WORKSPACE"
+
+      - name: Verify plugin entry files exist
+        shell: bash
+        run: |
+          set -e
+          for f in package.json cordis.patch.yml lib/index.js lib/client.js locale/zh.json locale/en.json icon.svg docs/DETAIL.md; do
+            if [ ! -f "$f" ]; then echo "::error::missing required file: $f"; exit 1; fi
+          done
+          echo "all required files present"
+
+      - name: Validate package.json
+        shell: bash
+        run: |
+          node -e '
+            const pkg = require("./package.json");
+            const must = [];
+            if (pkg.type !== "module") must.push("type must be module");
+            if (!pkg.dsh?.bundle?.patch) must.push("dsh.bundle.patch missing");
+            if (pkg.dsh?.client?.platform !== "web") must.push("dsh.client.platform must be web");
+            if (pkg.exports?.["./icon"] === undefined) must.push("exports ./icon missing");
+            if (pkg.exports?.["./locale/*.json"] === undefined) must.push("exports ./locale/*.json missing");
+            if (must.length) { console.error(must.join("\n")); process.exit(1); }
+            console.log("package.json ok — version " + pkg.version);
+          '
+
+      - name: Validate locale files
+        shell: bash
+        run: |
+          node -e '
+            const fs = require("fs");
+            for (const f of ["locale/zh.json", "locale/en.json"]) {
+              const j = JSON.parse(fs.readFileSync(f, "utf8"));
+              if (!j.meta?.title) { console.error(f + ": meta.title missing"); process.exit(1); }
+              if (!j.meta?.description) { console.error(f + ": meta.description missing"); process.exit(1); }
+              if (!j.meta?.detail) { console.error(f + ": meta.detail missing"); process.exit(1); }
+              console.log(f + " ok");
+            }
+          '
+
+      - name: Syntax check all sources
+        shell: bash
+        run: |
+          fail=0
+          for f in lib/*.js; do
+            node --check "$f" || { echo "::error::syntax error in $f"; fail=1; }
+          done
+          [ "$fail" -eq 0 ] && echo "all lib/*.js pass node --check"
+          exit "$fail"
+
+      - name: Run offline regression suite
+        shell: bash
+        run: node tests/.regress.mjs
+
+      - name: Report summary
+        if: always()
+        shell: bash
+        run: |
+          echo "### Regression result" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Node ${{ matrix.node }} on ${{ matrix.os }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          node tests/.regress.mjs >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
