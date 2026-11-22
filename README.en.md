@@ -554,7 +554,27 @@ the plugin has a budget boost that retries once, but a generous budget is still 
 3. **Watch usage statistics** — anomalous call volume is the first signal of unauthorized access
 4. **Keep `exposure.maskTopology` on** — screenshots will not leak upstream topology
 
-### What lives in `data/`
+### Where data lives
+
+> **Plugin data lives outside the package directory**, by default:
+>
+> ```
+> ~/.dsh/lantern-data/
+> ```
+>
+> Override with the `LANTERN_DATA_DIR` environment variable.
+>
+> **Why not inside the package**: when a plugin is installed as a package, the
+> package manager **replaces the whole package directory** on reinstall or upgrade.
+> Earlier versions kept data in `<plugin root>/data/`; one DSH restart that
+> triggered a reinstall wiped API keys, the usage ledger and the custom model
+> configuration. Keeping data outside the package makes reinstalls harmless.
+>
+> All profiles share the same data (there is no reason to keep a separate key store
+> per profile on one machine). If an old in-package `data/` exists, the plugin copies
+> its files to the new location on first start without overwriting anything.
+
+### What lives in `~/.dsh/lantern-data/`
 
 | File | Content | Sensitivity |
 |---|---|---|

@@ -10,6 +10,7 @@
  */
 import { LANTERN_DIR } from './paths.mjs'
 import fs from 'node:fs'
+import { PATHS, ensureDirs } from '../lib/storage.js'
 
 const ROOT = `${LANTERN_DIR}/lib/capabilities.js`
 const src = fs.readFileSync(ROOT, 'utf8')
@@ -32,9 +33,12 @@ const mod = await import('../lib/capabilities.js')
 const { CapabilityResolver, VALUE } = mod
 
 // persist 会写插件自己的 data/capabilities.json —— 先把原文件备份，测完还原
-const LIVE = `${LANTERN_DIR}/data/capabilities.json`
+// 数据目录位置由 storage.js 决定（可能在插件包之外），所以必须从这里取，
+// 不能硬编码 `${LANTERN_DIR}/data` —— 否则备份/还原的是错误的文件。
+await ensureDirs()
+const LIVE = PATHS.capabilities
 const backup = fs.existsSync(LIVE) ? fs.readFileSync(LIVE) : undefined
-console.log('  （已备份 data/capabilities.json，' + (backup ? backup.length + ' B' : '原本不存在') + '）')
+console.log('  （已备份 capabilities.json @ ' + LIVE + '，' + (backup ? backup.length + ' B' : '原本不存在') + '）')
 
 try {
   const reg = new CapabilityResolver({ llm: {} }, () => ({ capabilities: { profiles: 'use-builtin', learnNegative: true } }))
@@ -72,7 +76,7 @@ try {
 } finally {
   if (backup !== undefined) fs.writeFileSync(LIVE, backup)
   else if (fs.existsSync(LIVE)) fs.rmSync(LIVE)
-  console.log('  （已还原 data/capabilities.json）')
+  console.log('  （已还原 capabilities.json）')
 }
 
 console.log('\n' + (fail === 0 ? 'ALL PASS' : 'FAILURES') + ': ' + pass + ' passed, ' + fail + ' failed')

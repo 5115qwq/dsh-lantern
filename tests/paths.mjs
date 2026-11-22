@@ -29,8 +29,14 @@ export const LANTERN_DIR = (() => {
 /** lib 目录。 */
 export const LANTERN_LIB = `${LANTERN_DIR}/lib`
 
-/** data 目录。 */
-export const LANTERN_DATA = `${LANTERN_DIR}/data`
+/**
+ * 数据目录。
+ *
+ * ⚠ 不再等于 `${LANTERN_DIR}/data` —— 插件的数据目录已经移到**包之外**
+ * （默认 `~/.dsh/lantern-data`），因为包目录会在重装时被整体替换。
+ * 这里直接复用 storage.js 的解析结果，避免两处逻辑分叉。
+ */
+export { PATHS as LANTERN_PATHS } from '../lib/storage.js'
 
 /** 跑测试用的 node 可执行文件（默认就是当前这个）。 */
 export const NODE = process.execPath

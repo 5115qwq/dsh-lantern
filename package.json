@@ -1,6 +1,6 @@
 {
   "name": "dsh-lantern",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "LANtern（局域网模型网关）：把本机 DeepSeek Harness 已注册的全部模型，以 OpenAI / Anthropic 兼容接口开放给同一局域网。自带 API Key、限流熔断、能力闸门、四档推理契约、故障转移与用量统计。",
   "icon": "./icon.svg",
   "type": "module",
