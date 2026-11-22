@@ -4,7 +4,7 @@
 > 自带 API Key、限流熔断、能力闸门、四档推理契约、故障转移与用量统计。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.2-green.svg)](https://github.com/5115qwq/dsh-lantern/releases)
+[![Version](https://img.shields.io/github/package-json/v/5115qwq/dsh-lantern?label=version)](https://github.com/5115qwq/dsh-lantern/releases)
 [![Platform](https://img.shields.io/badge/DSH-%E2%89%A50.1.5-7c3aed.svg)](https://github.com/deepseek-ai/deepseek-harness)
 [![Tests](https://github.com/5115qwq/dsh-lantern/actions/workflows/tests.yml/badge.svg)](https://github.com/5115qwq/dsh-lantern/actions/workflows/tests.yml)
 
@@ -862,7 +862,7 @@ DSH 内核行为，非本插件所致。插件会原样透传 `max_tokens`（仅
 ### 版本号说明
 
 本仓库自 **1.0.0** 起独立编号（原版为 `0.1.x`），以区分两套代码基。
-当前版本 **1.0.2**。
+当前版本见上方徽章与 [Releases](https://github.com/5115qwq/dsh-lantern/releases)。
 
 ### 许可
 

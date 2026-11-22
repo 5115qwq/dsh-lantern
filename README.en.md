@@ -4,7 +4,7 @@
 > Ships API keys, rate limiting with circuit breaking, capability gating, a four-tier reasoning contract, failover and usage statistics.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.2-green.svg)](https://github.com/5115qwq/dsh-lantern/releases)
+[![Version](https://img.shields.io/github/package-json/v/5115qwq/dsh-lantern?label=version)](https://github.com/5115qwq/dsh-lantern/releases)
 [![Platform](https://img.shields.io/badge/DSH-%E2%89%A50.1.5-7c3aed.svg)](https://github.com/deepseek-ai/deepseek-harness)
 [![Tests](https://github.com/5115qwq/dsh-lantern/actions/workflows/tests.yml/badge.svg)](https://github.com/5115qwq/dsh-lantern/actions/workflows/tests.yml)
 
@@ -616,7 +616,7 @@ This fork would have been far more work without them.
 ### Version numbering
 
 This fork numbers independently from **1.0.0** (upstream is `0.1.x`) to keep the two code bases distinct.
-Current version: **1.0.2**.
+Current version: see the badge above or [Releases](https://github.com/5115qwq/dsh-lantern/releases).
 
 ### License
 
