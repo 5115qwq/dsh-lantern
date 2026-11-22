@@ -4,6 +4,24 @@
 
 ---
 
+## 1.0.9
+
+**修复：客户端模块注册失败，设置面板加载不出来**
+
+包名改为 `@5115qwq/dsh-lantern` 后，`lib/client.js` 里 `__ModuleLoader__.load`
+的注册 id 仍是旧名 `dsh-lantern`。DSH 用包名作为注册键去查表，两边对不上，
+浏览器端报：
+
+```
+loaded without registering "@5115qwq/dsh-lantern" via __ModuleLoader__.load
+```
+
+已改为与包名一致。
+
+> 这类「包名要同步到哪些地方」的问题连踩两次（1.0.8 的 cordis.patch.yml、
+> 1.0.9 的 client.js id），已加守卫测试 `tests/test-package-name.mjs` 覆盖。
+
+---
 ## 1.0.8
 
 **修复：改用 npm 包名后插件无法启用**
