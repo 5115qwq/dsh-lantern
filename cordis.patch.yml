@@ -11,4 +11,4 @@
 #   本文件随之不再被加载 —— 卸载即一条命令，不留悬空行。
 - insert:
     - id: lantern
-      name: 'dsh-lantern'
+      name: '@5115qwq/dsh-lantern'

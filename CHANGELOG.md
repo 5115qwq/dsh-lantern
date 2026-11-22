@@ -4,6 +4,18 @@
 
 ---
 
+## 1.0.8
+
+**修复：改用 npm 包名后插件无法启用**
+
+包名从 `dsh-lantern` 改为 `@5115qwq/dsh-lantern` 时，漏改了装配层
+`cordis.patch.yml` 里的 `name` 字段，导致 DSH 仍按旧名去 import，
+报 `ERR_MODULE_NOT_FOUND: Cannot find package 'dsh-lantern'`，插件无法启用。
+
+已修正。以后从 npm 安装（`@5115qwq/dsh-lantern`）可以正常启用并获得版本更新提示。
+
+---
+
 ## 1.0.7
 
 **磁盘占用更可控**
