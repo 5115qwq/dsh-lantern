@@ -1,0 +1,26 @@
+# ── 敏感数据：绝不提交 ──
+data/keys.json
+data/keys.json.*
+data/usage.jsonl
+data/usage.jsonl.*
+data/reports/
+data/attachment-ledger.json
+data/*.bak*
+data/*.ssrf-test-backup
+
+# ── 运行时产物 ──
+data/capabilities.json
+data/tmp/
+data/media/
+data/logs/
+data/lru/
+
+# ── 依赖与构建 ──
+node_modules/
+*.log
+
+# ── 编辑器 ──
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "LANtern · LAN model gateway",
+    "description": "Expose every model registered in your local DeepSeek Harness to the LAN over OpenAI- and Anthropic-compatible endpoints. Ships API keys, rate limiting, capability gating, a four-tier reasoning contract, failover and usage statistics.",
+    "detail": "docs/DETAIL.md"
+  }
+}

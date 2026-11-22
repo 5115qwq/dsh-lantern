@@ -1,0 +1,93 @@
+{
+  "name": "dsh-lantern",
+  "version": "1.0.2",
+  "description": "LANtern（局域网模型网关）：把本机 DeepSeek Harness 已注册的全部模型，以 OpenAI / Anthropic 兼容接口开放给同一局域网。自带 API Key、限流熔断、能力闸门、四档推理契约、故障转移与用量统计。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-connection"
+      ],
+      "immediately": true
+    },
+    "catalog": {
+      "category": "model",
+      "summary": {
+        "en": "Expose every model registered in your local DeepSeek Harness to the LAN over OpenAI- and Anthropic-compatible endpoints. Ships API keys, rate limiting, capability gating, a four-tier reasoning contract, failover and usage statistics.",
+        "zh": "把本机 DeepSeek Harness 已注册的全部模型，以 OpenAI / Anthropic 兼容接口开放给同一局域网。自带 API Key、限流熔断、能力闸门、四档推理契约、故障转移与用量统计。"
+      },
+      "capabilities": []
+    }
+  },
+  "files": [
+    "lib/",
+    "locale/*.json",
+    "docs/",
+    "icon.svg",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "LANtern-完整手册.md"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "lan",
+    "openai-compatible",
+    "anthropic-compatible",
+    "llm-gateway",
+    "local-network",
+    "self-hosted",
+    "proxy",
+    "reasoning-effort",
+    "failover"
+  ],
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.2",
+    "@deepseek-ai/dsh-llm": ">=0.1.5-rc.2 <0.2.0-0 || >=0.2.0-rc.1 <0.3.0-0"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Saretheya",
+    "url": "https://github.com/Saretheya"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/5115qwq/dsh-lantern.git"
+  },
+  "homepage": "https://github.com/5115qwq/dsh-lantern#readme",
+  "bugs": {
+    "url": "https://github.com/5115qwq/dsh-lantern/issues"
+  },
+  "contributors": [
+    {
+      "name": "5115qwq",
+      "url": "https://github.com/5115qwq"
+    }
+  ],
+  "fork": {
+    "of": "Saretheya/dsh-lantern",
+    "url": "https://github.com/Saretheya/dsh-lantern",
+    "note": "本版是原版的改版（fork）。原版采用 MIT 许可，原作者 Saretheya。"
+  }
+}
