@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="300" viewBox="0 0 640 300" role="img">
+  <title>LANtern gateway: LAN clients reach the models registered in the local DeepSeek Harness</title>
+  <desc>A phone and a laptop connect through a lantern-shaped gateway to a local harness that reaches several upstream providers.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffd76e"/>
+      <stop offset="100%" stop-color="#e8590c"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8f9fb"/>
+      <stop offset="100%" stop-color="#eef1f5"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#9aa3ad"/>
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#1c7ed6"/>
+    </marker>
+  </defs>
+
+  <rect width="640" height="300" fill="#ffffff"/>
+  <rect x="0.5" y="0.5" width="639" height="299" rx="14" fill="#fdfdff" stroke="#e8ecf1"/>
+
+  <!-- ═══ 左：局域网客户端 ═══ -->
+  <g>
+    <!-- 手机 -->
+    <rect x="40" y="92" width="46" height="76" rx="8" fill="none" stroke="#5c6670" stroke-width="2.5"/>
+    <rect x="47" y="104" width="32" height="46" rx="3" fill="#dfe4ea"/>
+    <circle cx="63" cy="159" r="3" fill="#5c6670"/>
+
+    <!-- 笔记本 -->
+    <rect x="104" y="98" width="68" height="46" rx="5" fill="none" stroke="#5c6670" stroke-width="2.5"/>
+    <rect x="111" y="105" width="54" height="32" rx="2" fill="#dfe4ea"/>
+    <path d="M96 152 h84 l-6 10 h-72 z" fill="#c3cad3"/>
+
+    <!-- 网络标识（三点连线，无文字） -->
+    <g transform="translate(46, 190)">
+      <circle cx="10" cy="10" r="5" fill="#9aa3ad"/>
+      <circle cx="34" cy="10" r="5" fill="#9aa3ad"/>
+      <circle cx="58" cy="10" r="5" fill="#9aa3ad"/>
+      <g stroke="#9aa3ad" stroke-width="1.8" fill="none">
+        <path d="M15 10 h14"/>
+        <path d="M39 10 h14"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- 箭头 1：客户端 → 网关 -->
+  <line x1="186" y1="136" x2="234" y2="136" stroke="#9aa3ad" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- ═══ 中：LANtern 网关 ═══ -->
+  <g transform="translate(244, 44)">
+    <rect x="0" y="0" width="150" height="186" rx="16" fill="url(#panel)" stroke="#d5dae1" stroke-width="1.5"/>
+
+    <!-- 灯笼本体 -->
+    <g transform="translate(75, 72) scale(0.50) translate(-128, -128)">
+      <path d="M108 44c0-11 9-20 20-20s20 9 20 20" fill="none" stroke="#8d99ae" stroke-width="9" stroke-linecap="round"/>
+      <rect x="106" y="42" width="44" height="11" rx="5" fill="#8d99ae"/>
+      <rect x="64" y="56" width="128" height="16" rx="8" fill="#495057"/>
+      <rect x="64" y="186" width="128" height="16" rx="8" fill="#495057"/>
+      <path d="M72 70h112c0 38-10 70-22 90-8 14-20 26-34 26s-26-12-34-26c-12-20-22-52-22-90z" fill="url(#g)"/>
+      <g fill="#1c7ed6">
+        <circle cx="128" cy="122" r="8"/>
+        <circle cx="103" cy="150" r="6"/>
+        <circle cx="153" cy="150" r="6"/>
+      </g>
+      <g stroke="#1c7ed6" stroke-width="3" stroke-linecap="round">
+        <path d="M122 128l-16 18"/>
+        <path d="M134 128l16 18"/>
+        <path d="M109 152h35"/>
+      </g>
+      <path d="M128 200v26" stroke="#495057" stroke-width="6" stroke-linecap="round"/>
+    </g>
+
+    <!-- 网关内部能力条 -->
+    <g transform="translate(21, 142)">
+      <rect x="0" y="0" width="108" height="8" rx="4" fill="#d5dae1"/>
+      <rect x="0" y="15" width="86" height="8" rx="4" fill="#dfe4ea"/>
+      <rect x="0" y="30" width="98" height="8" rx="4" fill="#e6eaef"/>
+    </g>
+  </g>
+
+  <!-- 箭头 2：网关 ⇄ DSH -->
+  <line x1="398" y1="132" x2="446" y2="132" stroke="#1c7ed6" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <line x1="446" y1="150" x2="402" y2="150" stroke="#1c7ed6" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowBlue)"/>
+
+  <!-- ═══ 右：DSH + providers ═══ -->
+  <g transform="translate(456, 56)">
+    <!-- DSH -->
+    <rect x="0" y="0" width="76" height="76" rx="12" fill="#eef1f5" stroke="#c3cad3" stroke-width="1.5"/>
+    <g fill="#5c6670">
+      <rect x="16" y="18" width="44" height="6" rx="3"/>
+      <rect x="16" y="30" width="34" height="6" rx="3"/>
+      <rect x="16" y="42" width="40" height="6" rx="3"/>
+    </g>
+    <circle cx="58" cy="60" r="6" fill="#40c057"/>
+
+    <!-- providers -->
+    <g transform="translate(96, 2)">
+      <rect x="0" y="0" width="56" height="18" rx="9" fill="#e6eaef" stroke="#d5dae1"/>
+      <circle cx="13" cy="9" r="4" fill="#9aa3ad"/>
+      <rect x="24" y="6" width="24" height="6" rx="3" fill="#c3cad3"/>
+    </g>
+    <g transform="translate(96, 28)">
+      <rect x="0" y="0" width="56" height="18" rx="9" fill="#e6eaef" stroke="#d5dae1"/>
+      <circle cx="13" cy="9" r="4" fill="#9aa3ad"/>
+      <rect x="24" y="6" width="24" height="6" rx="3" fill="#c3cad3"/>
+    </g>
+    <g transform="translate(96, 54)">
+      <rect x="0" y="0" width="56" height="18" rx="9" fill="#e6eaef" stroke="#d5dae1"/>
+      <circle cx="13" cy="9" r="4" fill="#9aa3ad"/>
+      <rect x="24" y="6" width="24" height="6" rx="3" fill="#c3cad3"/>
+    </g>
+    <g stroke="#c3cad3" stroke-width="1.8">
+      <path d="M76 20 h18"/>
+      <path d="M76 37 h18"/>
+      <path d="M76 63 h18"/>
+    </g>
+  </g>
+
+  <!-- ═══ 底部：四项能力图标（无文字） ═══ -->
+  <g transform="translate(40, 246)" opacity="0.92">
+    <!-- 盾：鉴权与限流 -->
+    <path d="M10 2 l8 3 v7 c0 6-4 10-8 12-4-2-8-6-8-12v-7z" fill="none" stroke="#5c6670" stroke-width="1.8"/>
+    <!-- 层叠：四档推理 -->
+    <g transform="translate(40, 0)" stroke="#5c6670" stroke-width="1.8" fill="none">
+      <rect x="0" y="4" width="20" height="5" rx="2.5"/>
+      <rect x="2" y="11" width="16" height="5" rx="2.5"/>
+      <rect x="4" y="18" width="12" height="5" rx="2.5"/>
+    </g>
+    <!-- 分支：故障转移 -->
+    <g transform="translate(80, 0)" stroke="#5c6670" stroke-width="1.8" fill="none">
+      <path d="M0 12 h8"/>
+      <path d="M8 12 l10 -8"/>
+      <path d="M8 12 l10 8"/>
+      <circle cx="21" cy="4" r="2.5"/>
+      <circle cx="21" cy="20" r="2.5"/>
+    </g>
+    <!-- 柱状：用量统计 -->
+    <g transform="translate(120, 0)" fill="#5c6670">
+      <rect x="0" y="12" width="4" height="8" rx="1"/>
+      <rect x="6" y="7" width="4" height="13" rx="1"/>
+      <rect x="12" y="3" width="4" height="17" rx="1"/>
+      <rect x="18" y="9" width="4" height="11" rx="1"/>
+    </g>
+  </g>
+</svg>
