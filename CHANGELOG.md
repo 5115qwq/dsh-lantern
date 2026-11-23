@@ -4,6 +4,81 @@
 
 ---
 
+## 1.0.10
+
+### 修复：新添加的模型不刷新
+
+以前在 Hub 里给已有 provider 添加模型后，网关的模型目录不会更新 ——
+必须去设置里「添加接口」让 provider 变化一次，或者等一分钟。
+客户端 `/v1/models` 一直看不到新模型。
+
+**根因是三个问题叠加：**
+
+**① 只订阅了一个事件。** DSH 对两类变更触发不同的事件：
+
+| 事件 | 含义 | 原来 |
+|---|---|---|
+| `llm/adapters-updated` | provider 增删 / 替换 | 已订阅 |
+| `llm/models-updated` | **某 provider 的模型清单变了** | **漏了** |
+
+加模型只改模型清单，provider 列表没变，所以事件不触发、目录不重建。
+
+**② 兜底轮询被指纹短路挡住。** 刷新调度里有一道「provider 指纹短路」，
+指纹只算 provider id 列表。既然加模型不改变指纹，每分钟一次的轮询
+次次都被挡回 —— 这个 bug 因此被永久隐藏，只能靠「加个接口」撞出来。
+
+**③ 刷新期间的变更被丢弃。** `refresh()` 在有一轮正在进行时直接复用旧
+Promise，且不留标记。即使事件触发了，若正好撞上正在刷新，这次变化也丢了。
+
+**修复：**
+
+- 订阅 `llm/models-updated`
+- 兜底轮询改为**强制刷新**，不再被指纹短路
+- `refresh()` 加 dirty 标记：刷新期间到来的变化在本轮结束后**补刷一轮**
+- 能力缓存同样订阅 `llm/models-updated` —— 否则新模型的能力信息、
+  旧模型变化的元数据会一直用缓存里的旧值
+- 面板 provider 页新增「刷新」按钮：在 Hub 里增删模型后点一下即可，
+  不必关掉面板重开
+
+### 性能
+
+这些在 provider / 模型数量多时会放大：
+
+- **`list()` 不再每次调用都排序** —— 它在热路径上（`GET /v1/models`
+  对每个模型调一次、宽松路由回退也调）。排序改为目录重建时做一次并缓存。
+- **过滤器判定改用 Set** —— `isPubliclyAllowed()` 原先每次调用都新建三个数组
+  并做 `Array.includes` 线性扫描；黑名单 100 条时一次请求要扫 300 次。
+  现在按 filters 对象引用缓存成 Set。
+- **目录刷新加上并发上限 6** —— 原先 `Promise.allSettled(providers.map(...))`
+  会把所有 provider 的 `listModels` 同时打出去，provider 多时形成瞬时峰值。
+  新增 `mapSettledWithConcurrency`，语义与 `allSettled` 一致。
+- **`describe()` 加结果缓存** —— 每次调用都要重新组装 6+ 个能力字段并 await
+  两次，而同一请求里同一模型会被组装多次。现在按
+  `provider + model + generation` 缓存，能力失效时随代次一起失效。
+- 刷新调度不再每次额外调用一次 `listProviders()`。
+
+### 新增：备份与迁移
+
+换机、重装、给同事复制设置都是常见场景，但之前只写了「数据目录在哪」，
+没说备份什么。现在补上：
+
+- **面板新增「导出配置」**（健康与诊断里）：写出一份
+  `config-export-<时间戳>.json`，只含配置项，
+  **不含 API Key、用量账本、能力学习记录** —— 可以放心分享。
+- **README 新增「备份与迁移」章节**（中英双语）：列出每个数据文件是什么、
+  哪些可以不备份、换机的四步操作。
+
+### 守卫测试
+
+- `tests/test-directory-events.mjs`（11 项）：两个事件都订阅、
+  轮询不被指纹短路、`dispose` 取消订阅；并与 DSH 源码对照事件名与签名。
+- `tests/test-hot-path.mjs`（24 项）：刷新竞态标记、`list()` 不排序、
+  过滤器 Set 缓存、并发上限、`describe` 缓存。
+- `tests/test-data-portability.mjs`（21 项）：`config/export` 的安全边界
+  （不含密钥/账本）、面板入口、中英文档覆盖。
+
+---
+
 ## 1.0.9
 
 **修复：客户端模块注册失败，设置面板加载不出来**
@@ -22,6 +97,7 @@ loaded without registering "@5115qwq/dsh-lantern" via __ModuleLoader__.load
 > 1.0.9 的 client.js id），已加守卫测试 `tests/test-package-name.mjs` 覆盖。
 
 ---
+
 ## 1.0.8
 
 **修复：改用 npm 包名后插件无法启用**

@@ -597,6 +597,36 @@ the plugin has a budget boost that retries once, but a generous budget is still 
 | `capabilities.json` | Capability probe results | Low |
 | `attachment-ledger.json` | Attachment references | Low |
 
+### Backup and migration
+
+**Full backup**: copy the whole data directory (default `~/.dsh/lantern-data/`).
+
+| What | File | Notes |
+|---|---|---|
+| Settings | `config.json` | listening, limits, filters, protocol switches |
+| API keys | `keys.json` | **contains plaintext keys** — keep it safe |
+| Learned capabilities | `capabilities.json` | probe/manual results; lost means re-learning |
+| Usage history | `usage.jsonl` + `usage-archive-*.jsonl` | ledger; losing it does not break anything |
+
+`tmp/` and `reports/` can be skipped (temporary files and regenerable reports).
+
+**Settings only** (no keys, no ledger):
+
+Settings → LANtern → Health & diagnostics → **Export config**, which writes
+`config-export-<timestamp>.json` into the data directory. It contains settings only —
+**no API keys, no usage ledger, no learned capabilities** — safe to share or commit.
+
+**Moving to another machine**:
+
+1. Old machine: back up the data directory as above
+2. New machine: install the plugin and start once (so it creates an empty data directory)
+3. Stop DSH, copy the backed-up files over the new data directory
+4. Start DSH — settings and keys are back
+
+> The data directory lives **outside the plugin package**, so uninstalling or
+> reinstalling the plugin never touches it. Conversely, deleting the data directory
+> is a factory reset (keys and usage go together).
+
 > **Upstream credentials are never here** — they live in DSH's own configuration, which this plugin does not read or copy.
 
 ---
