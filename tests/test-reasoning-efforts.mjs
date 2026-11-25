@@ -75,17 +75,17 @@ ok('R9c anthropic disabled → off', /body\.thinking\.type === 'disabled'\s*\n\s
 console.log('\n=== R10 前端改名 ===')
 const cli = fs.readFileSync(P + 'client.js', 'utf8')
 ok('R10a 有 editName state', cli.includes('const [editName, setEditName] = React.useState'))
-ok('R10b 有 editDisplay state', cli.includes('const [editDisplay, setEditDisplay] = React.useState'))
+ok('R10b 显示名已移除（合并进模型名）', !cli.includes('const [editDisplay, setEditDisplay]'))
 ok('R10c 展开时回填模型名', /setEditName\(m\.name\)/.test(cli))
-ok('R10d 展开时回填显示名', /setEditDisplay\(m\.display \?\? ''\)/.test(cli))
+ok('R10d 不再回填显示名', !/setEditDisplay\(/.test(cli))
 ok('R10e 清空不提交（不撞长度校验）', /nextName\.length > 0 && nextName !== m\.name \? \{ name: nextName \} : \{\}/.test(cli))
 ok('R10f 改名后才发 name', /\.\.\.namePatch,/.test(cli))
 ok('R10g 成功文案区分改名', cli.includes('已改名（客户端记得同步改 model 字段）'))
 ok('R10h 说明里点出 @ 不能用', cli.includes('不能带 @'))
-ok('R10i display 始终发（可清空）', /display: displayPatch,/.test(cli) && /const nextDisplay = editDisplay\.trim\(\)/.test(cli))
+ok('R10i display 跟随 name（不再单独维护）', /const displayPatch = namePatch\.name !== undefined \? namePatch\.name : m\.name/.test(cli))
 // R10j：改名时显示名默认跟着走 —— 只判「还停在旧模型名上」这一种情形，
 // 用户自己起过的显示名必须原样保留（服务端也是这个语义，单测 M2 钉死）。
-ok('R10j 改名时显示名默认跟随（仅当仍是旧模型名）', /const displayPatch = namePatch\.name !== undefined && nextDisplay === m\.name/.test(cli))
+ok('R10j 改名时显示名默认跟随', /const displayPatch = namePatch\.name !== undefined \? namePatch\.name : m\.name/.test(cli))
 // R10k：`namePatch` 必须在 `run()` **外面**的箭头函数体里声明。
 // 曾经的写法是 `onClick: () => run(async () => { const namePatch = ... }, namePatch.name === undefined ? ...)`，
 // 第二个实参在 `run(...)` 的调用层求值，读不到回调体里的 `namePatch` →
