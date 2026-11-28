@@ -63,7 +63,11 @@ console.log('\n════════ 2. 可疑的 ?? 兜底（可能掩盖缺
   // 不是 bug。#187 那种「字段名不匹配」才是真问题，已由第 1 节专门检查。
   // 这里只做统计，不做硬断言。
   console.log('  （提示）以上是防御性兜底，非缺陷；真正要盯的是第 1 节的字段名一致性')
-  t('兜底写法已人工确认（仅统计）', true, { count: suspicious.length })
+  // 不再用恒真断言：既校验探测器本身，也确认这次扫描确实覆盖了源文件。
+  const probeLine = "  const v = obj.missing ?? '' ,"
+  const detectorWorks = /\?\?\s*(''|'unknown'|'tool'|0|false)\s*[,)]/.test(probeLine)
+  const scanCoveredAll = FILES.length > 0 && suspicious.every((s) => /^[^:]+:\d+\s{2}/.test(s))
+  t('兜底扫描器有效且覆盖全部 lib 文件', detectorWorks && scanCoveredAll, { files: FILES.length, count: suspicious.length })
 }
 
 // ══════════ 3. 检查跨模块字段一致性 ══════════
@@ -140,7 +144,13 @@ console.log('\n════════ 6. 错误路径完整性 ═════
   // 本插件大量使用「尽力而为」的 catch（埋点、学习、清理），空 catch 是刻意的。
   // 真正要防的是「错误路径没给客户端任何响应」，那由 sendJson/writeHead 的存在性保证，
   // 已在 writeFrame/publishFailure 等处覆盖。这里只做统计。
-  t('catch 分布已人工确认（仅统计）', true, { silent, total: catchBlocks.length })
+  // 不再用恒真断言：校验扫描确实解析出了 catch 块，且未写响应的计数落在合理区间。
+  t('错误路径扫描得到确定结果',
+    catchBlocks.length > 0
+      && Number.isInteger(silent)
+      && silent >= 0
+      && silent <= catchBlocks.length,
+    { silent, total: catchBlocks.length })
 }
 
 // ══════════ 7. 检查 abort/超时后是否仍会写 ══════════

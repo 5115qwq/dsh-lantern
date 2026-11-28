@@ -23,7 +23,9 @@
 //              arrive(): if (this.factories.has(row.id)) 查同一个 key）
 //
 // 本测试守的就是这两处。
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync, readdirSync } from 'node:fs'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 import { LANTERN_DIR } from './paths.mjs'
 
 let pass = 0
@@ -78,23 +80,58 @@ console.log('【2】lib/client.js（客户端注册）')
 console.log('')
 console.log('【3】profile 配置（可选）')
 {
-  const profilePkg = 'C:/Users/才疏学浅/.dsh/profiles/desktop/package.json'
-  try {
-    const p = JSON.parse(readFileSync(profilePkg, 'utf8'))
-    const deps = Object.keys(p.dependencies ?? {}).filter((k) => /lantern/i.test(k))
-    const bundles = (p.dsh?.profile?.bundles ?? []).filter((b) => /lantern/i.test(b))
-    console.log(`      dependencies: ${deps.join(', ') || '(无)'}`)
-    console.log(`      bundles: ${bundles.join(', ') || '(无)'}`)
-    if (deps.length > 0) {
-      t('dependencies 里的包名与 package.json 一致', deps.every((d) => d === NAME), { deps, NAME })
-    } else {
-      console.log('      · 未在 profile 中安装，跳过')
+  // 不写死作者本机的绝对路径：优先用环境变量指定，否则按当前用户目录
+  // 自动找「确实装了本包」的 profile；两者都取不到时明确跳过，不静默忽略。
+  const envPath = process.env.LANTERN_PROFILE_PKG
+  let profilePkg
+  let skipReason = ''
+  if (typeof envPath === 'string' && envPath.length > 0) {
+    if (existsSync(envPath)) profilePkg = envPath
+    else skipReason = `LANTERN_PROFILE_PKG 指向的文件不存在：${envPath}`
+  } else {
+    const profilesRoot = join(homedir(), '.dsh', 'profiles')
+    try {
+      if (existsSync(profilesRoot)) {
+        for (const d of readdirSync(profilesRoot, { withFileTypes: true })) {
+          if (!d.isDirectory()) continue
+          const candidate = join(profilesRoot, d.name, 'package.json')
+          if (!existsSync(candidate)) continue
+          const j = JSON.parse(readFileSync(candidate, 'utf8'))
+          if (Object.keys(j.dependencies ?? {}).includes(NAME)) { profilePkg = candidate; break }
+        }
+      }
+    } catch (e) {
+      skipReason = `扫描 profile 目录失败：${String(e.message).slice(0, 100)}`
     }
-    if (bundles.length > 0) {
-      t('bundles 里的包名与 package.json 一致', bundles.every((b) => b === NAME), { bundles, NAME })
+  }
+
+  if (profilePkg === undefined) {
+    console.log('      · 跳过（非本机 profile）：' + (skipReason || '未发现装有本包的 profile，可用 LANTERN_PROFILE_PKG 指定'))
+  } else {
+    let p
+    try {
+      p = JSON.parse(readFileSync(profilePkg, 'utf8'))
+    } catch (e) {
+      // 解析/读取失败要明确记为失败，不静默吞掉。
+      t('profile package.json 可解析', false, String(e.message).slice(0, 120))
     }
-  } catch {
-    console.log('      · 读不到 profile，跳过')
+    if (p !== undefined) {
+      const deps = Object.keys(p.dependencies ?? {}).filter((k) => /lantern/i.test(k))
+      const bundles = (p.dsh?.profile?.bundles ?? []).filter((b) => /lantern/i.test(b))
+      console.log(`      profile: ${profilePkg}`)
+      console.log(`      dependencies: ${deps.join(', ') || '(无)'}`)
+      console.log(`      bundles: ${bundles.join(', ') || '(无)'}`)
+      if (deps.length > 0) {
+        t('dependencies 里的包名与 package.json 一致', deps.every((d) => d === NAME), { deps, NAME })
+      } else {
+        console.log('      · 未在 profile 中安装，跳过')
+      }
+      if (bundles.length > 0) {
+        t('bundles 里的包名与 package.json 一致', bundles.every((b) => b === NAME), { bundles, NAME })
+      } else {
+        console.log('      · bundles 中无 lantern，跳过')
+      }
+    }
   }
 }
 

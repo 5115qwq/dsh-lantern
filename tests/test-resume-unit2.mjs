@@ -27,7 +27,25 @@ console.log('S5 resumed:', fo.resumed, 'prefix in call2:', calls[1]?.[1]?.conten
 // 场景6：MAX_RESUMES 边界 —— 两个后端都断流：第一次续写到 b2，b2 再断 → 无第三个后端 → throw
 const sctx6={ llm:{ stream:(o)=> calls.push(o.messages) && makeStream([{type:'text-delta',text:o.provider==='p1'?'A':'B'},{throw:'drop'+o.provider}]) } }
 let fo6={attempts:[]}
+let s6Err
 try {
   for await (const c of streamWithFailover(sctx6, {log:()=>{}}, plans, {messages:[{role:'user',content:[{type:'text',text:'hi'}]}]}, fo6, {timeoutMs:0,retries:0})) console.log('S6 c',c)
   console.log('S6 NO THROW — check')
-} catch(e) { console.log('S6 threw:', e.message, 'flag=', e.lanternCommittedFailure, 'attempts=', fo6.attempts.length) }
+} catch(e) { s6Err = e; console.log('S6 threw:', e.message, 'flag=', e.lanternCommittedFailure, 'attempts=', fo6.attempts.length) }
+
+// ── 断言：把上面两个场景的实际结果钉死，失败时退出码非 0 ──
+let pass = 0
+let fail = 0
+const check = (name, cond, detail) => {
+  if (cond) { pass += 1; console.log('  PASS ' + name) }
+  else { fail += 1; console.log('  FAIL ' + name + (detail === undefined ? '' : '  ' + JSON.stringify(detail).slice(0, 180))) }
+}
+const texts = (arr) => arr.filter((c) => c.type === 'text-delta').map((c) => c.text).join('')
+
+check('S5 缓冲中的半截 delta 也进了续写前缀', calls[1]?.[1]?.content?.[0]?.text === '半截', { prefix: calls[1]?.[1]?.content?.[0]?.text })
+check('S5 两段正文都送达且发生过续写', texts(chunks) === '半截接上' && fo.resumed === 1, { chunks, resumed: fo.resumed })
+check('S6 两档都断流后抛出且标记为已提交失败', s6Err instanceof Error && s6Err.lanternCommittedFailure === true, { threw: s6Err instanceof Error, flag: s6Err?.lanternCommittedFailure })
+check('S6 只尝试了 2 档（无第三档可续写）', fo6.attempts.length === 2, { attempts: fo6.attempts.length })
+
+console.log(`\n═══ ${pass} passed / ${fail} failed ═══`)
+process.exitCode = fail > 0 ? 1 : 0

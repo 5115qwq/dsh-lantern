@@ -170,11 +170,19 @@ console.log('\n【T11 边界：非法 token / 缺配置】')
   const b = new Breaker(() => undefined, () => clock.t)
   check('T11a 配置为空也能用（走默认阈值 3）', b.status().threshold === 3)
   check('T11b 默认冷却 60 秒', b.status().cooldownSec === 60)
-  b.recordSuccess('k', Number.NaN)
-  b.recordSuccess('k', -5)
-  b.recordSuccess('k', 'abc')
+  let threw = false
+  try {
+    b.recordSuccess('k', Number.NaN)
+    b.recordSuccess('k', -5)
+    b.recordSuccess('k', 'abc')
+    b.recordSuccess('k', undefined)
+    b.recordSuccess('k', Number.POSITIVE_INFINITY)
+    b.status()
+  } catch (e) {
+    threw = true
+  }
   check('T11c 非法 token 不入窗口', b.outputTokensInWindow('k') === 0)
-  check('T11d 非法 token 不炸', true)
+  check('T11d 非法 token 不炸', threw === false)
 }
 
 console.log('\n【T12 createReservedGate】')

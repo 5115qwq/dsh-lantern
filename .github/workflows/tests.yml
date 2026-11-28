@@ -44,7 +44,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          for f in package.json cordis.patch.yml lib/index.js lib/client.js locale/zh.json locale/en.json icon.svg docs/DETAIL.md; do
+          for f in package.json cordis.patch.yml lib/index.js lib/client.js locale/zh.json locale/en.json icon.svg docs/DETAIL.md docs/DETAIL.zh.md docs/preview.svg; do
             if [ ! -f "$f" ]; then echo "::error::missing required file: $f"; exit 1; fi
           done
           echo "all required files present"

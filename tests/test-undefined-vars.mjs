@@ -42,6 +42,7 @@ for (const f of FILES) {
 
 console.log('\n=== 2. 常见未定义变量模式 ===')
 {
+  let dangling = 0
   // 危险的裸标识符（在插件里不该出现，除非确实定义了）
   const DANGEROUS = [
     { name: 'current', hint: '应写成 deps.current()' },
@@ -64,15 +65,18 @@ console.log('\n=== 2. 常见未定义变量模式 ===')
         // 确认该标识符在本文件里是否被声明过
         const declared = new RegExp(`(const|let|var|function)\\s+${d.name}\\b|\\b${d.name}\\s*[=,]`).test(src)
         if (!declared) {
+          dangling += 1
           t(`${f}:${i + 1} 未定义标识符 ${d.name}`, false, { line: L.trim().slice(0, 100), hint: d.hint })
         }
       })
     }
   }
   console.log('  （无 FAIL 表示没有发现裸未定义变量）')
-  // 这条只是汇总；具体问题已在上面逐条 FAIL 列出。
-  // 用独立计数，不受前面语法检查的 fail 影响。
-  t('裸标识符检查已执行', true)
+  // 不再用恒真断言：把本次扫描实际发现的遗漏数作为结果断言，
+  // 同时确认扫描确实覆盖了源文件与全部危险模式。
+  t('裸标识符检查已执行且未发现遗漏',
+    dangling === 0 && FILES.length > 0 && DANGEROUS.length > 0,
+    { scannedFiles: FILES.length, patterns: DANGEROUS.length, dangling })
 }
 
 console.log('\n=== 3. fail/failJson 参数个数 ===')

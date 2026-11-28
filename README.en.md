@@ -75,8 +75,8 @@ this plugin handles **protocol translation and policy only**.
 | **Four-tier reasoning contract** | Exposes `minimal` / `low` / `medium` / `max` externally, maps internally to each model's real vocabulary |
 | **Capability gate** | Per-parameter state is `supported` / `unsupported` / **`unknown`**; `unknown` is forwarded as-is, never treated as unsupported |
 | **Failover** | One public model can bind several upstreams; ordered by health, retried on failure |
-| **Health cooldown** | Failing upstreams enter exponential backoff; cooling upstreams are skipped outright |
-| **Background self-check** | When every upstream is cooling, requests get an immediate 503 while a sweep probes recovery |
+| **Health cooldown** | Failing upstreams enter exponential backoff; when another tier is available, cooling tiers are skipped for this attempt (not moved to the tail) |
+| **Background self-check** | When every upstream is cooling, the gateway does not reject outright: it walks the full chain in order and retries once if needed, returning 503 only when both rounds fail, while a background sweep probes recovery |
 | **API keys** | Per-key rate limits; plaintext retrievable at any time; keys never expire |
 | **Usage stats** | Per model / key / provider / call type / time window; HTML report + CSV + PNG export |
 | **Attachment ledger** | Tracks only attachments created by this plugin, reclaimed on expiry (dry-run by default) |
@@ -342,7 +342,7 @@ X-Lantern-Attempt-Codes: #1=backend_timeout(+600s),#2=ok
 
 | Failure type | Cooldown | Backoff |
 |---|---|---|
-| First-byte timeout / `429` / `5xx` | Yes | Exponential (default 600s base, configurable cap) |
+| Request timeout (first-byte for streaming / idle for non-streaming) / `429` / `5xx` | Yes | Exponential (default 30s base, configurable cap) |
 | Reasoning-only / completely empty reply | Yes | **Fixed base cooldown, no exponential growth** |
 | Client cancelled | No | — |
 | 4xx parameter error | No | — |
@@ -351,19 +351,19 @@ X-Lantern-Attempt-Codes: #1=backend_timeout(+600s),#2=ok
 > was too small and self-heal once the client adjusts. Treating them as backend faults could make a
 > single small-budget request lock a model out for a long time.
 
-When every upstream cools down, requests get an immediate 503 plus a background sweep:
+When another tier is available, cooling tiers are skipped for that attempt (they are no longer moved to the tail). But if **every** upstream is cooling, the gateway does not reject the request: it walks the whole chain in its original order, and if that entire round fails it clears the cooldowns recorded in that round and retries the whole chain once more. Only when **both** rounds fail does it return 503, with a message explaining that the backends just entered cooldown and will recover automatically when it expires. A background sweep still probes recovery in parallel.
 
 ```json
 {
   "error": {
-    "message": "All upstreams are cooling down, please retry later",
+    "message": "Model temporarily unavailable: all backends just entered cooldown after repeated failures and will recover automatically when the cooldown expires. Please retry later or switch to another model.",
     "code": "model_unavailable",
     "allCooling": true
   }
 }
 ```
 
-A successful probe clears the cooldown immediately.
+A successful probe clears that backend's cooldown immediately.
 
 ### Custom models
 
@@ -409,24 +409,33 @@ File: `data/config.json` (editable in the panel, or directly then restart)
 
 | Field | Default | Meaning |
 |---|---|---|
-| `maxConcurrent` | `100` | Global concurrency cap |
+| `maxConcurrent` | `2` | Global concurrency cap |
 | `reserveForLocal` | `1` | Slots reserved for DSH's own conversations |
-| `perKeyRpm` | `100` | Requests per key per minute |
-| `perKeyTpm` | `80000` | Tokens per key per minute |
+| `perKeyRpm` | `30` | Requests per key per minute |
+| `perKeyTpm` | `60000` | Tokens per key per minute |
 | `maxTokensCap` | `0` | Upper bound for `max_tokens` (`0` = no cap) |
 | `maxBodyBytes` | `4194304` | Request body limit (4 MB) |
-| `requestTimeoutMs` | `600000` | **First-byte** timeout |
+| `requestTimeoutMs` | `600000` | Request timeout (10 min): first-byte for streaming, idle for non-streaming |
 | `maxConcurrentTools` | `8` | Parallel tool calls per request |
 | `breaker.enabled` | `true` | Circuit breaker master switch |
-| `breaker.consecutiveRateLimits` | `20` | Consecutive rate limits before opening |
+| `breaker.consecutiveRateLimits` | `3` | Consecutive rate limits before opening |
 | `breaker.cooldownSec` | `60` | Breaker cooldown |
 | `backendHealth.enabled` | `true` | Health memory switch |
-| `backendHealth.cooldownSec` | `3600` | Base cooldown |
-| `backendHealth.maxCooldownSec` | `7200` | Exponential backoff ceiling |
+| `backendHealth.cooldownSec` | `30` | Base cooldown |
+| `backendHealth.maxCooldownSec` | `300` | Exponential backoff ceiling |
 
-> **Timeout is a first-byte timeout**: the timer clears once the first substantive chunk
-> (text / reasoning / tool call) arrives. Long-thinking models that emit nothing for tens of
-> seconds are normal and are not misjudged as timed out.
+> **Cooldowns are bounded**: `cooldownSec` accepts 5–600 seconds and `maxCooldownSec`
+> 5–1800 seconds (the latter is never lower than the former). An overly long cooldown
+> keeps the usable backend chain narrowed long after a brief hiccup, so both the server
+> and the settings panel clamp values to this range.
+
+> **Streaming and non-streaming time out differently**:
+> - **Streaming** uses a *first-byte* timeout — the timer clears once the first substantive
+>   chunk (text / reasoning / tool call) arrives, so long-thinking models that emit nothing
+>   for tens of seconds are not misjudged as timed out.
+> - **Non-streaming** uses an *idle* timeout — the timer restarts on every received chunk and
+>   only fires when nothing arrives for the whole window, so a long reply is never cut off
+>   by a total-duration cap.
 
 ### Other sections
 
@@ -511,13 +520,13 @@ Every `X-Lantern-*` header explains *why* this result happened:
 | `401` | Key invalid / missing / disabled |
 | `404` | Model or endpoint not found, or protocol disabled |
 | `429` | Rate limited |
-| `503` | All upstreams cooling / empty upstream reply / breaker open |
+| `503` | Both failover rounds failed (incl. all upstreams cooling) / empty upstream reply / breaker open |
 
 ### Internal failure codes
 
 | Code | Meaning | Cooldown |
 |---|---|---|
-| `backend_timeout` | First-byte timeout | Yes |
+| `backend_timeout` | Request timeout (first-byte / idle) | Yes |
 | `reasoning_only_empty` | Reasoning but no text | Yes (no escalation) |
 | `empty_completion` | Completely empty | Yes (no escalation) |
 | `tool_markup_leaked` | Tool markup leaked into text | Yes |
@@ -536,7 +545,7 @@ and read the panel's *actual* bind address.
 the tier may be cooling (look for `(+600s)` in `X-Lantern-Attempt-Codes`), or failover is walking the chain
 (look at `X-Lantern-Attempts`).
 
-**503 "all upstreams cooling"** — wait for the cooldown, or use *Health & diagnostics → Clear memory* to reset.
+**503 after two failed rounds** — the gateway returns 503 only after walking the whole chain twice. Recovery is automatic once the cooldown expires; you can also use *Health & diagnostics → Clear memory* to reset immediately. `X-Lantern-Attempt-Codes` shows the result of each tier.
 
 **`max_tokens` seems ignored** — this is DSH kernel behavior, not this plugin. The plugin forwards `max_tokens`
 verbatim (shrinking only when it exceeds `maxTokensCap`). `X-Lantern-Max-Tokens` shows the value actually sent.
@@ -650,11 +659,11 @@ This fork would have been far more work without them.
 | Area | Summary |
 |---|---|
 | **Fixes** | Crash from malformed system messages (`content.some is not a function`); reasoning silently disabled on switch-only vocabularies; timeouts misclassified as empty replies |
-| **Reliability** | Cooldowns now skip rather than reorder; empty replies no longer escalate exponentially; all-cooling returns an immediate 503 with a background sweep |
+| **Reliability** | Cooldowns now skip rather than reorder; empty replies no longer escalate exponentially; when all backends are cooling the gateway walks the full chain in order and retries once, returning 503 only if both rounds fail |
 | **Capabilities** | Three-state capability gating refined; four-tier contract made consistent across all three protocols; tool-call capability detection |
 | **Statistics** | Usage stats rebuilt (aggregation by the client-facing model name, month-over-month and daily average, sparklines, time-window filter); HTML report rebuilt (440 KB → 57 KB); CSV and PNG export |
 | **Interface** | Collapsible panel sections, key bulk actions with search and sort, relative timestamps, merged diagnostics page, narrow-screen layout |
-| **Engineering** | 792 offline regression checks (including integrity guards for module exports, panel field alignment and message shape); dead code from removed features dropped |
+| **Quality assurance** | A continuously expanded offline regression suite guards module loading, panel field alignment and message construction |
 
 ### Version numbering
 

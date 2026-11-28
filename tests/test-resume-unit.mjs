@@ -78,10 +78,12 @@ try {
 // ── 场景3：无处续写（单 plan）→ 保持旧语义 throw ──
 const sctx3 = { llm: { stream: () => makeStream([{ type: 'text-delta', text: 'X' }, { throw: 'boom' }]) } }
 let fo3 = { attempts: [] }
+let s3Err
 try {
   for await (const c of streamWithFailover(sctx3, { log: () => {} }, [plans[0]], baseOptions, fo3, { timeoutMs: 0, retries: 0 })) console.log('S3 chunk', c)
   console.log('S3 NO THROW — BAD')
 } catch (e) {
+  s3Err = e
   console.log('S3 threw as expected:', e.message, 'committedFailure flag =', e.lanternCommittedFailure, 'fo3.failure =', JSON.stringify(fo3.failure))
 }
 
@@ -91,3 +93,23 @@ let fo4 = { attempts: [] }
 const sctx4 = { llm: { stream: () => makeStream([{ type: 'text-delta', text: 'hello' }, { type: 'finish', reason: { kind: 'stop' } }]) } }
 for await (const c of streamWithFailover(sctx4, { log: () => {} }, [plans[0]], baseOptions, fo4, { timeoutMs: 0, retries: 0 })) chunks4.push(c)
 console.log('S4 normal:', JSON.stringify(chunks4), 'fo4.resumed =', fo4.resumed, 'fo4.plan?.binding =', fo4.plan?.binding)
+
+// ── 断言：把上面各场景的实际结果钉死，失败时退出码非 0 ──
+let pass = 0
+let fail = 0
+const check = (name, cond, detail) => {
+  if (cond) { pass += 1; console.log('  PASS ' + name) }
+  else { fail += 1; console.log('  FAIL ' + name + (detail === undefined ? '' : '  ' + JSON.stringify(detail).slice(0, 180))) }
+}
+const texts = (arr) => arr.filter((c) => c.type === 'text-delta').map((c) => c.text).join('')
+
+check('S1 两个后端的正文都送达', texts(chunks) === '前半段后半段', { chunks })
+check('S1 续写发生过且切到 b2', fo.resumed === 1 && fo.plan?.binding === 'b2', { resumed: fo.resumed, plan: fo.plan?.binding })
+check('S1 第二后端收到「前半段」前缀', calls[1]?.some((m) => m.role === 'assistant' && (m.content ?? []).some((c) => c.text === '前半段')), { call2: calls[1]?.length })
+check('S1 两次尝试：首档失败、次档成功且都已提交', fo.attempts?.length === 2 && fo.attempts[0].ok === false && fo.attempts[0].committed === true && fo.attempts[1].ok === true, { attempts: fo.attempts?.length })
+check('S2 finish 帧断流也续写成功', texts(chunks2) === 'AABB' && fo2.resumed === 1, { chunks2, resumed: fo2.resumed })
+check('S3 无下一档时抛出且标记为已提交失败', s3Err instanceof Error && s3Err.lanternCommittedFailure === true && fo3.failure?.message === 'boom', { threw: s3Err instanceof Error, flag: s3Err?.lanternCommittedFailure, failure: fo3.failure })
+check('S4 正常流不触发续写', texts(chunks4) === 'hello' && fo4.resumed === undefined && fo4.plan?.binding === 'b1', { resumed: fo4.resumed, plan: fo4.plan?.binding })
+
+console.log(`\n═══ ${pass} passed / ${fail} failed ═══`)
+process.exitCode = fail > 0 ? 1 : 0
